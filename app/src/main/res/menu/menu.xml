@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#FFFFFF">
+    <item
+        android:id="@+id/mnuSalir"
+        android:title="@string/salir"/>
+    <item
+        android:id="@+id/mnunuevo"
+        android:title="@string/NewElement"/>
+    <item
+        android:id="@+id/mnuInventario"
+        android:title="Cambiar Inventario"/>
+</menu>
