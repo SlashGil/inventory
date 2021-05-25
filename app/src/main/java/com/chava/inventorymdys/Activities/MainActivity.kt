@@ -1,5 +1,6 @@
 package com.chava.inventorymdys.Activities
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.*
@@ -51,6 +52,7 @@ import java.io.*
 import com.google.gson.reflect.TypeToken as TypeToken1
 
 class MainActivity :AppCompatActivity(),View.OnClickListener {
+    private val KEY_MSG = "Message"
     private var customAlertDialogView : View? = null
     private var currentPhotoPath = ""
     private var fotos : MutableList<Imagen>? = mutableListOf()
@@ -117,7 +119,20 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         fullDirectorio = DirectorioRaiz + DirectorioPropio
         //Revisar si ya se habia seleccionado previamente un Inventario
         if (!edit) {
-            buildDialog()
+            val s = intent.extras?.getString(KEY_MSG)
+            if (s != null) {
+                if(s.nonEmpty()){
+                    Snackbar.make(MainLayout,s,Snackbar.LENGTH_LONG).show()
+                }
+            }
+            if(!pref!!.contains(KEY_INVENTORY)){
+
+                buildDialog()
+            }
+            else{
+                edtNumInventory.setText(pref!!.getString(KEY_INVENTORY,""))
+                edtNumInventory.isEnabled = false
+            }
             checkUser()
             checkIdM()
             enviar!!.setOnClickListener(this)
@@ -291,7 +306,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
     private fun saveIdM() {
         var editor : SharedPreferences.Editor = pref!!.edit()
         editor.putInt("IdM" , id_m)
-        editor.commit()
+        editor.apply()
     }
 
     /**private fun chargeImgSqlite() {
@@ -399,12 +414,13 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                 Snackbar.LENGTH_LONG
             ).show()
             id_m++
-            onRefresh()
+            onRefresh("Nuevo Registro")
             progressDialog.cancel()
         }
 
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onClick(v : View) {
         if (v.id == R.id.takePhoto1) {
             number = 1
@@ -495,13 +511,6 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
     private fun cargarWebService() {
         progreso = ProgressBar(this)
         progreso!!.progress = 0
-        val progressDialog = ProgressDialog(this@MainActivity)
-        progressDialog.setTitle("Cargando Datos")
-        progressDialog.setMessage("Procesando Datos")
-        progressDialog.show()
-        Thread.sleep(3000)
-        progressDialog.setCancelable(false)
-        progressDialog.setCanceledOnTouchOutside(false)
         val lista = listOf<EditText>(edtNumActivo!! , edtNumPedimento!! , edtFactura_UUID!!)
         val photoData = mutableListOf<ImagesInfo>()
         if (!edit) {
@@ -548,7 +557,6 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
             enviar!!.isEnabled = false
             enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
             GlobalScope.launch {
-
                 val result = sendToServer(mat)
                 when (result) {
                     is Result.Success -> {
@@ -559,24 +567,23 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                         Log.d("RAW" , request)
                         log.debug("RAW Request" , request)
                         if (answer.message!!.contains("id")) {
-                            val id = answer.message!!.split("id").last()
+                            val id = answer.message!!.split(":").last()
                             Snackbar.make(
                                 MainLayout ,
-                                "Registro exitoso, el Objeto tiene el ID: " + id ,
+                                "Registro exitoso, el Objeto tiene el ID: $id" ,
                                 Snackbar.LENGTH_LONG
                             ).show()
-                            progressDialog.cancel()
+                            onRefresh("Registro exitoso, el Objeto tiene el ID: $id")
                         } else {
                             Snackbar.make(MainLayout , answer.message!! , Snackbar.LENGTH_LONG)
                                 .show()
-                            changeProgressBar("Guardando datos en local" , progressDialog)
                             if (saveToRoom(mat) == 0) {
-                                progressDialog.cancel()
                                 Snackbar.make(
                                     MainLayout ,
-                                    "Se han guardado tus datos" ,
+                                    "Se han guardado tus datos de manera local" ,
                                     Snackbar.LENGTH_LONG
                                 ).show()
+                                onRefresh("Se han guardado tus datos de manera local")
                             }
                         }
                     }
@@ -584,19 +591,17 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                         log.debug("ERROR!! " + result.error.toString())
                         Snackbar.make(MainLayout , result.error.toString() , Snackbar.LENGTH_LONG)
                             .show()
-                        changeProgressBar("Guardando datos de manera local" , progressDialog)
                         if (saveToRoom(mat) == 0) {
-                            progressDialog.cancel()
                             Snackbar.make(
                                 MainLayout ,
-                                "Se han guardado tus datos" ,
+                                "Se han guardado tus datos de manera local" ,
                                 Snackbar.LENGTH_LONG
                             ).show()
+                            onRefresh("Se han guardado tus datos de manera local")
                         }
                     }
                 }
             }
-            onRefresh()
         } else {
             enviar!!.isEnabled = false
             enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
@@ -613,13 +618,12 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                         Log.d("RAW" , request)
                         log.debug("RAW Request" , request)
                         if (answer.message!!.contains("id")) {
-                            val id = answer.message!!.split("id").last()
+                            val id = answer.message!!.split(":").last()
                             Snackbar.make(
                                 MainLayout ,
-                                "Registro exitoso, el Objeto tiene el ID: " + id ,
+                                "Registro exitoso, el Objeto tiene el ID: $id" ,
                                 Snackbar.LENGTH_LONG
                             ).show()
-                            progressDialog.cancel()
                         }
                     }
                     is Result.Failure -> {
@@ -655,7 +659,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                 startActivityForResult(login , 0)
             }
             R.id.mnunuevo -> {
-                onRefresh()
+                onRefresh("Nuevo Registro")
             }
             R.id.mnuInventario -> {
                 eraseInventory()
@@ -766,7 +770,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         editor.remove(KEY_ID)
         editor.remove(KEY_INVENTORY)
         editor.remove(KEY_CLIENT)
-        editor.commit()
+        editor.apply()
     }
 
 
@@ -776,7 +780,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         editor.remove(KEY_INVENTORY)
         editor.remove(KEY_CLIENT)
         editor.remove("Fecha")
-        editor.commit()
+        editor.apply()
     }
 
     //Funcion que construye el dialog
@@ -833,7 +837,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                                             true -> {
                                                 pref!!.edit()
                                                     .putInt(KEY_CLIENT , listC[i].id_c.toInt())
-                                                    .commit()
+                                                    .apply()
                                                 buildDialog2(listC[i].id_c , listE)
                                                 dialog.dismiss()
                                             }
@@ -877,7 +881,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                                 var string = it.inventory + " " + it.date
                                 if (items[i] == string) {
                                     edtNumInventory!!.setText(it.inventory)
-                                    pref!!.edit().putString(KEY_INVENTORY,it.inventory).commit()
+                                    pref!!.edit().putString(KEY_INVENTORY,it.inventory).apply()
                                     edtNumInventory!!.isEnabled = false
                                     dialog.dismiss()
                                 }
@@ -932,22 +936,14 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
             enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
     }
 
-    private fun onRefresh() {
-        if (edit) {
-            edit = false
-            imgLay.visibility = View.GONE
-            edtComenFotosLay.visibility = View.VISIBLE
-            edtComenFotos.visibility = View.VISIBLE
-            camLay.visibility = View.VISIBLE
-            takePhoto.setOnClickListener(this)
-        }
-        else{
-            contador = 0
-            countPhotos.text = "Fotos: $contador"
-            deleteImages()
-            MaterialToEdit = null
-            edit = false
-        }
+    @SuppressLint("SetTextI18n")
+    private fun onRefresh(s : String) {
+        contador = 0
+        countPhotos.text = "Fotos: $contador"
+        deleteImages()
+        MaterialToEdit = null
+        edit = false
+        intent.putExtra(KEY_MSG,s)
         finish()
         startActivity(intent)
 
@@ -996,6 +992,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onActivityResult(requestCode : Int , resultCode : Int , data : Intent?) {
         super.onActivityResult(requestCode , resultCode , data)
         if (resultCode == RESULT_OK) {
