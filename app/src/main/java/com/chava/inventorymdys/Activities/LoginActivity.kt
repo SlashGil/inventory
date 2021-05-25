@@ -22,14 +22,20 @@ import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.chava.inventorymdys.Activities.MainActivity
+import com.chava.inventorymdys.Entity.LoginAnswer
 import com.chava.inventorymdys.Entity.User
 import com.chava.inventorymdys.R
 import com.chava.inventorymdys.SQLiteHelper
 import com.chava.inventorymdys.Utilities.Online
 import com.chava.inventorymdys.VolleySingleton
+import com.chava.inventorymdys.interfaces.API
 import com.chava.inventorymdys.ui.login.LoginViewModel
 import com.chava.inventorymdys.ui.login.LoginViewModelFactory
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var loginViewModel: LoginViewModel
@@ -51,10 +57,6 @@ class LoginActivity : AppCompatActivity() {
         val username = findViewById<EditText>(R.id.username)
         val password = findViewById<EditText>(R.id.password)
         val login = findViewById<Button>(R.id.login)
-        var face = Typeface.createFromAsset(assets,"font/nimbus.ttf")
-        login.setTypeface(face)
-        username.setTypeface(face)
-        password.setTypeface(face)
         val loading = findViewById<ProgressBar>(R.id.loading)
         loginViewModel = ViewModelProviders.of(this , LoginViewModelFactory())
             .get(LoginViewModel::class.java)
@@ -116,39 +118,43 @@ class LoginActivity : AppCompatActivity() {
 }
 
     private fun loginRequest(username: String , password: String){
-            var url = "http://www.eo-ti.com/api/login.php?"
-            var request = "nomb=$username&passw=$password"
-            var fullUrl: String = "$url$request"
-            var isLogged = false
-            var loginRequest = JsonObjectRequest(
-                Request.Method.GET ,
-                fullUrl ,
-                null ,
-                Response.Listener<JSONObject> {
-                    Log.d("RESPONSE" , "onResponse attach")
-                    Log.d("Response" , "${it.toString()}")
-                    var data = it.getString("data")
-                    var status = it.getString("status")
-                    if (status == "801") {
-                        var stmessage = it.getString("status_message")
-                        var name = stmessage.substringAfterLast("ss ")
-                        Log.d("onResponseAnswer" , "$status, $stmessage, $data, $name")
-                        guardarUsuario(username,name,data)
-                        Toast.makeText(this,"Bienvenido $name!", Toast.LENGTH_LONG).show()
-                        isLogged = true
-                        Intent()
-                    } else {
-                        Toast.makeText(this, "Acceso Denegado!! Verifica tus credenciales", Toast.LENGTH_LONG).show()
+            var url = "http://marketi.servehttp.com:80/EO-Plataform/Eo-service/"
+            val retrofit = Retrofit.Builder()
+                .baseUrl(url)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+            val service =retrofit.create(API::class.java)
+            val call = service.login(username,password)
+            call.enqueue(object: Callback<LoginAnswer> {
+
+                override fun onResponse(
+                    call: Call<LoginAnswer>? ,
+                    response: retrofit2.Response<LoginAnswer>?
+                ) {
+                    var isLogged = false
+                    if(response!!.code()==200){
+                        val values = response.body()!!
+                        if(values.status!!.toInt()==801){
+                            var name = values.status_message!!.substringAfterLast("ss ")
+                            Log.d("onResponseAnswer" , "${values.status}, ${values.status_message}, ${values.id}, $name")
+                            guardarUsuario(username,name,values.id.toString())
+                            Toast.makeText(this@LoginActivity,"Bienvenido $name!", Toast.LENGTH_LONG).show()
+                            isLogged = true
+                            Intent()
+                        }
+                        else{
+                            isLogged = false
+                            Toast.makeText(this@LoginActivity,"Acceso denegado!", Toast.LENGTH_LONG).show()
+                        }
                     }
-                } ,
-                Response.ErrorListener {
-                    Log.d("Response" , it.toString())
-                    Log.d("Response" , it.networkResponse.data.toString())
-                    Log.d("ERROR Response" , it.stackTrace.toString())
+                }
+
+                override fun onFailure(call: Call<LoginAnswer>? , t: Throwable?) {
+                    Log.d("Response" , t.toString())
                     isLogged = false
-                    Toast.makeText(this,"Acceso denegado!", Toast.LENGTH_LONG).show()
-                })
-            volley!!.requestQueue.add(loginRequest)
+                    Toast.makeText(this@LoginActivity,"Acceso denegado!", Toast.LENGTH_LONG).show()
+                }
+            })
     }
     private fun Intent(){
         var intent: Intent = Intent(this, MainActivity::class.java)

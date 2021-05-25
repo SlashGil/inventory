@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="5dp">
+
+    <GridLayout
+        android:id="@+id/gridRVItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:rowCount="1">
+
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="250dp"
+            android:layout_height="match_parent"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/caseNumberTxt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/search"
+                android:textAlignment="center"
+                android:textSize="14dp"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/companyTxt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/search"
+                android:textAlignment="center"
+                android:textSize="14dp"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/manufacturerTxt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/search"
+                android:textAlignment="center"
+                android:textSize="14dp"/>
+        </androidx.appcompat.widget.LinearLayoutCompat>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnOk"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_row="0"
+            android:padding="5dp"
+            android:layout_column="1"
+            android:background="@color/btnFoto"
+            android:drawableEnd="@drawable/ic_check"
+            android:text="Ok"
+            android:textSize="18dp"
+            android:layout_gravity="center|center_horizontal"
+            app:backgroundTint="@color/btnFoto"
+            tools:text="@android:string/ok" />
+    </GridLayout>
+
+</com.google.android.material.card.MaterialCardView>

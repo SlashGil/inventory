@@ -1,12 +1,19 @@
 package com.chava.inventorymdys.Activities
+
 import android.Manifest
 import android.app.AlertDialog
 import android.app.ProgressDialog
-import android.content.*
+import android.content.DialogInterface
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.Typeface
 import android.net.Uri
-import android.os.*
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
@@ -16,8 +23,9 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.EditText
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
@@ -31,12 +39,16 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.wajahatkarim3.easyvalidation.core.view_ktx.nonEmpty
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.default
 import id.zelory.compressor.constraint.destination
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.json.JSONObject
 import org.slf4j.Logger
@@ -46,11 +58,12 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
 
-import java.io.*
-import com.google.gson.reflect.TypeToken as TypeToken1
-
-class MainActivity :AppCompatActivity(),View.OnClickListener {
+class EditMaterial : AppCompatActivity() , View.OnClickListener {
     private var customAlertDialogView : View? = null
     private var currentPhotoPath = ""
     private var fotos : MutableList<Imagen>? = mutableListOf()
@@ -70,8 +83,8 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
     val KEY_NAME = "NAME"
     val KEY_ID = "ID_USER"
     val KEY_USER = "USERNAME"
-    val KEY_INVENTORY = "Inventory"
     val KEY_CLIENT = "ID_Cliente"
+    val KEY_INVENTORY = "Inventory"
     val DirectorioRaiz = "InventoryApp/"
     var data : JSONObject = JSONObject()
     private var DirectorioPropio : String? = null
@@ -109,27 +122,11 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
             takePhoto1.setOnClickListener(this)
             takePhoto2.setOnClickListener(this)
             takePhoto3.setOnClickListener(this)
-            takePhoto!!.setOnClickListener(this)
         }
-
 
         DirectorioPropio = "${edtNumInventory!!.text.toString()}/"
         fullDirectorio = DirectorioRaiz + DirectorioPropio
         //Revisar si ya se habia seleccionado previamente un Inventario
-        if (!edit) {
-            buildDialog()
-            checkUser()
-            checkIdM()
-            enviar!!.setOnClickListener(this)
-            takePhoto!!.setOnClickListener(this)
-
-            //Validar campos
-            enviar!!.isEnabled = false
-            takePhoto!!.isEnabled = false
-
-        }
-        // updateSpinner()
-        //updateSpinnerVolley()
     }
 
     fun setTypefaces(face : Typeface) {
@@ -209,7 +206,6 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         MaterialToEdit = materialFromServer
         log.debug("id_material" , materialFromServer.id_material)
         fillData()
-
     }
 
     private fun fillData() {
@@ -337,74 +333,6 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         }
     }
 
-    private fun updateLater() {
-        val progressDialog = ProgressDialog(this@MainActivity)
-        progressDialog.setTitle("Cargando Datos")
-        progressDialog.setMessage("Procesando Datos de manera local")
-        progressDialog.show()
-        progressDialog.setCancelable(false)
-        progressDialog.setCanceledOnTouchOutside(false)
-        val lista = listOf<EditText>(edtNumActivo!! , edtNumPedimento!! , edtFactura_UUID!!)
-
-        val photoData = mutableListOf<ImagesInfo>()
-        for (foto in fotos!!) {
-            if (edit) {
-                val imgI = ImagesInfo(foto.descripcion , "" , foto.path , e = true)
-                photoData.add(imgI)
-            } else {
-                var imgI = ImagesInfo(foto.descripcion , "" , foto.path , e = false)
-                photoData.add(imgI)
-            }
-
-        }
-        val mat = Material(
-            pref!!.getInt(KEY_INVENTORY , 0)!!.toString() ,
-            edtNumInventory!!.text.toString() ,
-            edtDescription!!.text.toString() ,
-            edtMarca!!.text.toString() ,
-            edtModelo!!.text.toString() ,
-            edtNumSerie!!.text.toString() ,
-            edtNumMaquina!!.text.toString() ,
-            edtPlanta!!.text.toString() ,
-            edtUbicPlanta!!.text.toString() ,
-            edtDivision!!.text.toString() ,
-            edtLinea!!.text.toString() ,
-            edtArea!!.text.toString() ,
-            id_user ,
-            edtComentarios!!.text.toString() ,
-            edtExtra1!!.text.toString() ,
-            edtExtra2!!.text.toString() ,
-            edtExtra3!!.text.toString() ,
-            edtExtra4!!.text.toString() ,
-            edtExtra5!!.text.toString() ,
-            Gson().toJson(photoData)
-        )
-
-        for (EditText in lista) {
-            if (EditText.nonEmpty()) {
-                for (i in lista.indices) {
-                    when (i) {
-                        0 -> mat.num_activo = edtNumActivo!!.text.toString()
-                        1 -> mat.pedimento = edtNumPedimento!!.text.toString()
-                        2 -> mat.factura_uuid = edtFactura_UUID!!.text.toString()
-                    }
-                }
-            }
-        }
-
-        if (repository.insertMaterial(mat) == 0) {
-            Snackbar.make(
-                MainLayout ,
-                "Tus datos han sido guardados, Puedes seguir!" ,
-                Snackbar.LENGTH_LONG
-            ).show()
-            id_m++
-            onRefresh()
-            progressDialog.cancel()
-        }
-
-    }
-
     override fun onClick(v : View) {
         if (v.id == R.id.takePhoto1) {
             number = 1
@@ -418,30 +346,9 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
             number = 3
             tomarFotos()
         }
-        if (v.id == R.id.takePhoto) {
-
-            if (contador < 3) {
-                contador++
-                string = edtDescription.text.toString()
-                tomarFotos()
-                countPhotos.text = "Fotos : $contador"
-            } else {
-                takePhoto!!.isEnabled = false
-                enviar!!.isEnabled = true
-                edtComenFotos!!.setText("Ya tomaste tus fotos")
-                edtComenFotos!!.isEnabled = false
-                Toast.makeText(
-                    this ,
-                    "Lo siento, solo puedes tomar 3 fotos por caso" ,
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
         if (v.id == R.id.enviar) {
             if (Online.isOnline()) {
                 cargarWebService()
-            } else {
-                updateLater()
             }
         }
     }
@@ -495,151 +402,44 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
     private fun cargarWebService() {
         progreso = ProgressBar(this)
         progreso!!.progress = 0
-        val progressDialog = ProgressDialog(this@MainActivity)
+        val progressDialog = ProgressDialog(this@EditMaterial)
         progressDialog.setTitle("Cargando Datos")
         progressDialog.setMessage("Procesando Datos")
         progressDialog.show()
-        Thread.sleep(3000)
         progressDialog.setCancelable(false)
         progressDialog.setCanceledOnTouchOutside(false)
-        val lista = listOf<EditText>(edtNumActivo!! , edtNumPedimento!! , edtFactura_UUID!!)
-        val photoData = mutableListOf<ImagesInfo>()
-        if (!edit) {
-            val mat = Material(
-                pref!!.getInt(KEY_CLIENT , 0).toString() ,
-                edtNumInventory!!.text.toString() ,
-                edtDescription!!.text.toString() ,
-                edtMarca!!.text.toString() ,
-                edtModelo!!.text.toString() ,
-                edtNumSerie!!.text.toString() ,
-                edtNumMaquina!!.text.toString() ,
-                edtPlanta!!.text.toString() ,
-                edtUbicPlanta!!.text.toString() ,
-                edtDivision!!.text.toString() ,
-                edtLinea!!.text.toString() ,
-                edtArea!!.text.toString() ,
-                id_user ,
-                edtComentarios!!.text.toString() ,
-                edtExtra1!!.text.toString() ,
-                edtExtra2!!.text.toString() ,
-                edtExtra3!!.text.toString() ,
-                edtExtra4!!.text.toString() ,
-                edtExtra5!!.text.toString() ,
-                Gson().toJson(photoData)
-            )
-            for (i in 0 until fotos!!.size) {
-                val imgIn =
-                    ImagesInfo(fotos!![i].descripcion , fotos!![i].imagen , fotos!![i].path , false)
-                photoData.add(imgIn)
-            }
-            mat.fotos = photoData.toList()
-            Log.d("JSON" , Gson().toJson(mat).toString())
-            for (EditText in lista) {
-                if (EditText.nonEmpty()) {
-                    for (i in lista.indices) {
-                        when (i) {
-                            0 -> mat.num_activo = edtNumActivo!!.text.toString()
-                            1 -> mat.pedimento = edtNumPedimento!!.text.toString()
-                            2 -> mat.factura_uuid = edtFactura_UUID!!.text.toString()
-                        }
-                    }
+    enviar!!.isEnabled = false
+    enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
+    safeDataToMaterial()
+    Log.d("JSON" , Gson().toJson(MaterialToEdit).toString())
+    GlobalScope.launch {
+        val result = sendToServer(MaterialToEdit!!)
+        when (result) {
+            is Result.Success -> {
+                val answer = result.response.body()
+                Log.d("ANSWER" , answer!!.message)
+                log.debug("ANSWER " + answer!!.message)
+                val request = result.response.raw().toString()
+                Log.d("RAW" , request)
+                log.debug("RAW Request" , request)
+                if (answer.message!!.contains("id")) {
+                    val id = answer.message!!.split("id").last()
+                    Snackbar.make(
+                        MainLayout ,
+                        "Registro exitoso, el Objeto tiene el ID: " + id ,
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                    progressDialog.cancel()
                 }
             }
-            enviar!!.isEnabled = false
-            enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
-            GlobalScope.launch {
-
-                val result = sendToServer(mat)
-                when (result) {
-                    is Result.Success -> {
-                        val answer = result.response.body()
-                        Log.d("ANSWER" , answer!!.message)
-                        log.debug("ANSWER " + answer!!.message)
-                        val request = result.response.raw().toString()
-                        Log.d("RAW" , request)
-                        log.debug("RAW Request" , request)
-                        if (answer.message!!.contains("id")) {
-                            val id = answer.message!!.split("id").last()
-                            Snackbar.make(
-                                MainLayout ,
-                                "Registro exitoso, el Objeto tiene el ID: " + id ,
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                            progressDialog.cancel()
-                        } else {
-                            Snackbar.make(MainLayout , answer.message!! , Snackbar.LENGTH_LONG)
-                                .show()
-                            changeProgressBar("Guardando datos en local" , progressDialog)
-                            if (saveToRoom(mat) == 0) {
-                                progressDialog.cancel()
-                                Snackbar.make(
-                                    MainLayout ,
-                                    "Se han guardado tus datos" ,
-                                    Snackbar.LENGTH_LONG
-                                ).show()
-                            }
-                        }
-                    }
-                    is Result.Failure -> {
-                        log.debug("ERROR!! " + result.error.toString())
-                        Snackbar.make(MainLayout , result.error.toString() , Snackbar.LENGTH_LONG)
-                            .show()
-                        changeProgressBar("Guardando datos de manera local" , progressDialog)
-                        if (saveToRoom(mat) == 0) {
-                            progressDialog.cancel()
-                            Snackbar.make(
-                                MainLayout ,
-                                "Se han guardado tus datos" ,
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-                }
-            }
-            onRefresh()
-        } else {
-            enviar!!.isEnabled = false
-            enviar!!.backgroundTintList = getColorStateList(R.color.buttonDisabled)
-            safeDataToMaterial()
-            Log.d("JSON" , Gson().toJson(MaterialToEdit).toString())
-            GlobalScope.launch {
-                val result = sendToServer(MaterialToEdit!!)
-                when (result) {
-                    is Result.Success -> {
-                        val answer = result.response.body()
-                        Log.d("ANSWER" , answer!!.message)
-                        log.debug("ANSWER " + answer!!.message)
-                        val request = result.response.raw().toString()
-                        Log.d("RAW" , request)
-                        log.debug("RAW Request" , request)
-                        if (answer.message!!.contains("id")) {
-                            val id = answer.message!!.split("id").last()
-                            Snackbar.make(
-                                MainLayout ,
-                                "Registro exitoso, el Objeto tiene el ID: " + id ,
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                            progressDialog.cancel()
-                        }
-                    }
-                    is Result.Failure -> {
-                        log.debug("ERROR!! " + result.error.toString())
-                        Snackbar.make(MainLayout , result.error.toString() , Snackbar.LENGTH_LONG)
-                            .show()
-                    }
-                }
+            is Result.Failure -> {
+                log.debug("ERROR!! " + result.error.toString())
+                Snackbar.make(MainLayout , result.error.toString() , Snackbar.LENGTH_LONG)
+                    .show()
             }
         }
+    } }
         //Log.d("JSON", Gson().toJson(mat))
-    }
-
-    private fun saveToRoom(mat : Material) : Int {
-        for (foto in mat.fotos) {
-            foto.I = ""
-        }
-        mat.fotosJson = Gson().toJson(mat.fotos)
-        return repository.insertMaterial(mat)
-    }
 
     override fun onCreateOptionsMenu(menu : Menu?) : Boolean {
         menuInflater.inflate(R.menu.menu , menu)
@@ -648,21 +448,14 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
 
     override fun onOptionsItemSelected(item : MenuItem) : Boolean {
         when (item.itemId) {
-            R.id.mnuSalir -> {
-                logout()
-                Toast.makeText(this , "Adios " + username + "!" , Toast.LENGTH_LONG).show()
-                var login = Intent(this , LoginActivity::class.java)
-                startActivityForResult(login , 0)
-            }
             R.id.mnunuevo -> {
-                onRefresh()
+                var intent = Intent(this,MainActivity::class.java)
+                startActivity(intent)
+                finish()
             }
             R.id.mnuInventario -> {
                 eraseInventory()
                 buildDialog()
-            }
-            R.id.update -> {
-                syncNow()
             }
             R.id.searchActivity -> {
                 val intent = Intent(this , Search::class.java)
@@ -673,108 +466,13 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun syncNow() {
-        GlobalScope.launch {
-            var materials = repository.getMaterials()
-            var count = materials.size
-            var i = 0
-            startNotification("Dato $i/$count")
-            materials.forEach {
-                val type = object : TypeToken1<List<ImagesInfo>>() {}.type
-                it.fotos = Gson().fromJson(it.fotosJson , type)
-                it.fotos.forEach {
-                    Log.d("PICTURE" , it.P)
-                    var filename = FilenameUtils.getName(it.P)
-                    Log.d("PICTURE" , filename)
-                    var file = File(it.P)
-                    Log.d("FILENAME" , filename)
-                    Log.d("PICTURE" , file.path)
-                    it.I = convertImageFileToBase64(file)
-                }
-                i++
-                startNotification("Dato $i/$count")
-                GlobalScope.launch {
-                    var result = sendToServer(it)
-                    when (result) {
-                        is Result.Success -> {
-                            var answer = result.response.body()
-                            if (answer!!.message!!.contains("id")) {
-                                notificationSuccess(answer.message!!)
-                                it.status = 1
-                                repository.updateStatus(it)
-                            }
-                        }
-                        is Result.Failure -> {
-                            notificationError(result.error.toString())
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun notificationSuccess(string : String) {
-        val builder = NotificationCompat.Builder(applicationContext , CHANNEL_ID).apply {
-            setContentTitle("Datos enviados")
-            setContentText(string)
-            setSmallIcon(R.drawable.ic_check)
-            priority = NotificationCompat.PRIORITY_LOW
-        }
-        with(NotificationManagerCompat.from(applicationContext)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(notificationId , builder.build())
-        }
-    }
-
-    private fun notificationError(string : String) {
-        var builder = NotificationCompat.Builder(applicationContext , CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_error)
-            .setContentTitle("Error")
-            .setContentText("Hubo un error $string")
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText("Hubo un error al enviar. Tus datos si se han guardado. En caso de que no, nosotros lo revisaremos")
-            )
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        with(NotificationManagerCompat.from(applicationContext)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(notificationId , builder.build())
-        }
-    }
-
-    private fun startNotification(msg : String) {
-        val builder = NotificationCompat.Builder(applicationContext , CHANNEL_ID).apply {
-            setContentTitle("Envio de Datos")
-            setContentText("Envio en progreso... $msg")
-            setSmallIcon(R.drawable.ic_envio)
-            priority = NotificationCompat.PRIORITY_LOW
-        }
-        with(NotificationManagerCompat.from(applicationContext)) {
-            // notificationId is a unique int for each notification that you must define
-            notify(notificationId , builder.build())
-        }
-    }
-
-    private fun logout() {
-        borrarUsuario()
-    }
-
-    private fun borrarUsuario() {
-        var editor = pref!!.edit()
-        editor.remove(KEY_USER)
-        editor.remove(KEY_NAME)
-        editor.remove(KEY_ID)
-        editor.remove(KEY_INVENTORY)
-        editor.remove(KEY_CLIENT)
-        editor.commit()
-    }
 
 
     private fun eraseInventory() {
         val editor = pref!!.edit()
         editor.remove("NumInv")
-        editor.remove(KEY_INVENTORY)
         editor.remove(KEY_CLIENT)
+        editor.remove(KEY_INVENTORY)
         editor.remove("Fecha")
         editor.commit()
     }
@@ -822,7 +520,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                                 item.add(listC[i].id_c + " " + listC[i].name)
                             }
                             var items = item.toTypedArray()
-                            var builder = MaterialAlertDialogBuilder(this@MainActivity)
+                            var builder = MaterialAlertDialogBuilder(this@EditMaterial)
                             builder.setTitle("Clientes")
                             builder.setSingleChoiceItems(
                                 items ,
@@ -832,7 +530,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                                         when (which == i) {
                                             true -> {
                                                 pref!!.edit()
-                                                    .putInt(KEY_CLIENT , listC[i].id_c.toInt())
+                                                    .putInt(KEY_CLIENT , listC[i].id)
                                                     .commit()
                                                 buildDialog2(listC[i].id_c , listE)
                                                 dialog.dismiss()
@@ -864,7 +562,7 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
             }
         }
         var items = item.toTypedArray()
-        var builder = MaterialAlertDialogBuilder(this@MainActivity)
+        var builder = MaterialAlertDialogBuilder(this@EditMaterial)
         builder.setTitle("Inventarios")
         builder.setSingleChoiceItems(
             items ,
@@ -877,7 +575,6 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
                                 var string = it.inventory + " " + it.date
                                 if (items[i] == string) {
                                     edtNumInventory!!.setText(it.inventory)
-                                    pref!!.edit().putString(KEY_INVENTORY,it.inventory).commit()
                                     edtNumInventory!!.isEnabled = false
                                     dialog.dismiss()
                                 }
@@ -1053,13 +750,5 @@ class MainActivity :AppCompatActivity(),View.OnClickListener {
 
             override fun onTextChanged(s: CharSequence , start: Int , before: Int , count: Int) {}
         })
-    }
-}
-inline fun <reified T> Call<T>.executeForResult(): Result<T> {
-    return try {
-        val response = execute()
-        Result.Success(this , response)
-    } catch (e: Exception) {
-        Result.Failure(this , e)
     }
 }

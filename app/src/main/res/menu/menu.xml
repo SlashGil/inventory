@@ -10,4 +10,11 @@
     <item
         android:id="@+id/mnuInventario"
         android:title="Cambiar Inventario"/>
+    <item
+        android:id="@+id/update"
+        android:title="Sincronizar Inventario"/>
+    <item
+        android:id="@+id/searchActivity"
+        android:title="Buscar Activo"/>
+
 </menu>

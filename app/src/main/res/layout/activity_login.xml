@@ -8,45 +8,79 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
+    android:id="@+id/Login_Layout"
     tools:context=".LoginActivity">
 
-    <EditText
-        android:id="@+id/username"
-        android:layout_width="315dp"
-        android:layout_height="44dp"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/usernameLay"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="220dp"
         android:layout_marginEnd="24dp"
-
-        android:backgroundTint="#1A292724"
         android:hint="@string/prompt_email"
-        android:inputType="textEmailAddress"
-        android:selectAllOnFocus="true"
-        android:textColorHint="#66292724"
-        android:textSize="13sp"
+        android:textColorHint="@color/colorAccent"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/colorAccent"
+        app:boxStrokeWidth="3dp"
+        app:boxStrokeWidthFocused="3dp"
+        app:counterEnabled="true"
+        app:counterMaxLength="80"
+        app:counterOverflowTextColor="@color/design_default_color_error"
+        app:hintTextColor="@color/colorAccent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <EditText
-        android:id="@+id/password"
-        android:layout_width="315dp"
-        android:layout_height="44dp"
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/username"
+            android:layout_width="315dp"
+            android:layout_height="60dp"
+            android:fontFamily="@font/montserrat"
+            android:inputType="textEmailAddress"
+            android:maxLines="1"
+            android:maxLength="80"
+            android:selectAllOnFocus="true"
+            android:textSize="15sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-
-        android:backgroundTint="#1A292724"
+        style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
+        app:boxBackgroundMode="outline"
+        app:boxStrokeColor="@color/colorAccent"
+        app:boxStrokeWidth="3dp"
+        app:boxStrokeWidthFocused="3dp"
+        app:hintTextColor="@color/colorAccent"
         android:hint="@string/prompt_password"
-        android:imeActionLabel="@string/action_sign_in_short"
-        android:imeOptions="actionDone"
-        android:inputType="textPassword"
-        android:selectAllOnFocus="true"
-        android:textColorHint="#66292724"
-        android:textSize="13sp"
+        android:textColorHint="@color/colorAccent"
+        android:id="@+id/passwordLay"
+        app:counterEnabled="true"
+        app:counterMaxLength="25"
+        app:counterOverflowTextColor="@color/design_default_color_error"
+        app:passwordToggleEnabled="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/username" />
+        app:layout_constraintTop_toBottomOf="@+id/usernameLay">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/password"
+            android:layout_width="315dp"
+            android:layout_height="60dp"
+            android:fontFamily="@font/montserrat"
+            android:imeActionLabel="@string/action_sign_in_short"
+            android:maxLength="25"
+            android:imeOptions="actionDone"
+            android:inputType="textPassword"
+            android:selectAllOnFocus="true"
+            android:textSize="13sp" />
+    </com.google.android.material.textfield.TextInputLayout>
+
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/login"
@@ -58,19 +92,22 @@
         android:layout_marginEnd="48dp"
         android:layout_marginBottom="64dp"
         android:background="@color/colorButton"
+        android:backgroundTint="@color/colorButton"
         android:enabled="false"
+        android:fontFamily="@font/montserrat"
         android:gravity="center"
         android:text="@string/action_sign_in"
         android:textColor="#FFFFFF"
         android:textSize="15sp"
         android:textStyle="bold"
+        app:backgroundTint="@color/colorButton"
         app:icon="@drawable/candado"
         app:iconGravity="textStart"
         app:iconTint="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/password"
+        app:layout_constraintTop_toBottomOf="@+id/passwordLay"
         app:layout_constraintVertical_bias="0.071"
         app:strokeColor="#0F111A" />
 
@@ -78,7 +115,7 @@
         android:id="@+id/imageView2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/username"
+        app:layout_constraintBottom_toTopOf="@+id/usernameLay"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -88,7 +125,7 @@
         android:id="@+id/Copyrigth"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/source_sans_pro"
+        android:fontFamily="@font/montserrat"
         android:text="@string/Copyright"
         android:textColor="#1C1960"
         android:textSize="11sp"

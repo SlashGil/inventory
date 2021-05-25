@@ -20,4 +20,39 @@
     <string name="blank">El campo debe ser llenado</string>
     <string name="channel_description">Mostrar el progreso de tu envio de datos</string>
     <string name="channel_name">Envio de datos</string>
+    <string name="inventario_de_activos">INVENTARIO DE ACTIVOS</string>
+    <string name="num_inventario">Num Inventario</string>
+    <string name="descripcion">Descripción</string>
+    <string name="marca">Marca</string>
+    <string name="modelo">Modelo</string>
+    <string name="num_serie">Num Serie</string>
+    <string name="num_maquina">Num Maquina</string>
+    <string name="extra_1">Extra 1</string>
+    <string name="extra_2">Extra 2</string>
+    <string name="extra_3">Extra 3</string>
+    <string name="extra_4">Extra 4</string>
+    <string name="extra_5">Extra 5</string>
+    <string name="num_pedimento">Num Pedimento</string>
+    <string name="factura">Factura</string>
+    <string name="num_activo">Num Activo</string>
+    <string name="area">Área</string>
+    <string name="linea">Linea</string>
+    <string name="planta">Planta</string>
+    <string name="ubic_planta">Ubicación Planta</string>
+    <string name="division">División</string>
+    <string name="comentarios">Comentarios</string>
+    <string name="comentarios_de_foto">Comentarios de Foto</string>
+    <string name="fotos">Fotos: 0</string>
+    <string name="guardar">Guardar</string>
+    <string name="title_activity_search">Search</string>
+    <!--
+    This string is used for square devices and overridden by hello_world in
+    values-round/strings.xml for round devices.
+    -->
+    <string name="hello_world">Hello Square World!</string>
+    <string name="search">Ingrese el dato a buscar</string>
+    <string name="param_search">Parametro de Busqueda</string>
+    <string name="Okbtn">OK</string>
+    <string name="search_not_found">Tu busqueda no ha dado resultados</string>
+    <string name="inventario_de_activos_edit">INVENTARIO DE ACTIVOS (EDITAR)</string>
 </resources>

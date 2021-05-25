@@ -1,18 +1,22 @@
 package com.chava.inventorymdys.Entity
 
-class Inventario(
-    number: String ,
-    cliente: String ,
-    inventario: String ,
-    hora: String
-) {
-    val number = number
-    val cliente = cliente
-    val inventario = inventario
-    val hora = hora
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
+
+@Entity(tableName = "inventories")
+data class Inventario(
+    @SerializedName("num_inventario")
+    var inventory: String = "" ,
+    @SerializedName("fecha_inventario")
+    var date: String = "",
+    @SerializedName("id_cliente")
+    var id_c: String = "") {
+    @PrimaryKey(autoGenerate = true)
+    var id: Int = 1
 
     override fun toString() : String{
-        var String = number + " " + cliente + " "+ inventario +" "+ hora
+        var String =  inventory +" "+ date
         return String
     }
 

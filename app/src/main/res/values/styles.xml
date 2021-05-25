@@ -9,5 +9,13 @@
         <item name="windowNoTitle">true</item>
         <item name="windowActionBar">false</item>
     </style>
+    <style name="Widget.MaterialComponents.TextInputLayout.FilledBox.Rounded" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="shapeAppearanceOverlay">@style/Rounded_ShapeAppearanceOverlay.MaterialComponents.TextInputLayout</item>
+        <item name="boxStrokeColor">@color/colorAccent</item>
+    </style>
 
+    <style name="Rounded_ShapeAppearanceOverlay.MaterialComponents.TextInputLayout" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

@@ -1,0 +1,4 @@
+<resources>
+    <string name="hello_world">Hello Round World!</string>
+    <string name="param_search">Parametro de Busqueda</string>
+</resources>
