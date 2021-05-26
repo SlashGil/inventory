@@ -32,9 +32,8 @@ class Search : AppCompatActivity() {
     var client:Int = 0
     var pref: SharedPreferences? = null
     var list = arrayOf("Num Activo","Num Pedimento", "ID Material")
-    val listC = mutableListOf<Cliente>()
     val KEY_CLIENT = "ID_Cliente"
-    val listE = mutableListOf<Inventario>()
+    val KEY_INVENTORY = "Inventario"
     var searchTypeText: String = ""
     var item: MutableList<String> = mutableListOf()
     private val listener by lazy {
@@ -89,7 +88,8 @@ class Search : AppCompatActivity() {
                 val service =retrofit.create(API::class.java)
                 if(searchTypeText == "ID Material")
                 {
-                    val searchQuery = Search(changeQueryText(searchTypeText),s,pref!!.getString("Inventario","NA")!!,pref!!.getInt("ID_CLIENTE",0)!!.toString())
+                    val searchQuery = Search(changeQueryText(searchTypeText),s,pref!!.getString(KEY_INVENTORY,"NA")!!,
+                        pref!!.getInt(KEY_CLIENT , 0).toString())
                     call = service.search(searchQuery)
                 }
                 else
@@ -109,7 +109,6 @@ class Search : AppCompatActivity() {
                                 var data = response.body()
                                 Log.d("Search" , data.toString())
                                 if (data!!.isNotEmpty()) {
-
                                     if (data[0].msj.isEmpty()) {
                                         var adapter = SearchAdapter(data!! as ArrayList<SearchItem>)
                                         adapter.setOnItemClickListener {
@@ -137,7 +136,6 @@ class Search : AppCompatActivity() {
                             }
                         }
                     }
-
                     override fun onFailure(call: Call<List<SearchItem>> , t: Throwable) {
                         Snackbar.make(results_rv,t.toString(), Snackbar.LENGTH_LONG).show()
                         Log.d("Error!!",t.toString())
@@ -163,7 +161,8 @@ class Search : AppCompatActivity() {
         return ""
     }
     private fun buildDialog() {
-
+        val listC = mutableListOf<Cliente>()
+        val listE = mutableListOf<Inventario>()
         var url ="http://marketi.servehttp.com:80/EO-Plataform/Eo-service/"
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
@@ -207,9 +206,12 @@ class Search : AppCompatActivity() {
                                     for( i in items.indices){
                                         when(which == i){
                                             true -> {
-                                                pref!!.edit().putInt(KEY_CLIENT,listC[i].id.toInt()).commit()
+                                                pref!!.edit()
+                                                    .putInt(KEY_CLIENT , listC[i].id_c.toInt())
+                                                    .apply()
+                                                buildDialog2(listC[i].id_c , listE)
                                                 dialog.dismiss()
-                                                buildDialog2(listC[pref!!.getInt(KEY_CLIENT,0)].id_c,listE)
+
                                             }
                                         }
                                     }
@@ -249,7 +251,7 @@ class Search : AppCompatActivity() {
                             listE.forEach {
                                 var string = it.inventory
                                 if(items[i] == string){
-                                    pref!!.edit().putString("Inventario",items[i]).commit()
+                                    pref!!.edit().putString(KEY_INVENTORY,items[i]).apply()
                                     dialog.dismiss()
                                 }
                             }

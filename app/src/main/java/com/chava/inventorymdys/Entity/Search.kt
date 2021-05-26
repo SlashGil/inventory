@@ -10,6 +10,6 @@ class Search(type:String,search:String,inventory:String = "",client:String = "",
     @SerializedName("search")
     var search:String = search
     @SerializedName("inventory")
-    var inventory: String? = inventory
+    var inventory: String = inventory
 
 }
