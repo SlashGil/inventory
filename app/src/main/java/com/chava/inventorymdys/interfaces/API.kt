@@ -1,6 +1,7 @@
 package com.chava.inventorymdys.interfaces
 
 import com.chava.inventorymdys.Entity.*
+import com.google.gson.JsonObject
 import retrofit2.Call
 import retrofit2.Response
 import retrofit2.http.Body
@@ -23,4 +24,7 @@ interface API {
 
     @POST("api/update.php")
     fun update(@Body mat: Material): Call<InsertAnswer>
+
+    @POST("api/update.php")
+    fun update_json(@Body mat: Material): Call<JsonObject>
 }

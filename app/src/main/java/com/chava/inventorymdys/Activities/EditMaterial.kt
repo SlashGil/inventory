@@ -23,11 +23,8 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import com.chava.inventorymdys.Entity.*
 import com.chava.inventorymdys.R
@@ -39,7 +36,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.wajahatkarim3.easyvalidation.core.view_ktx.nonEmpty
 import id.zelory.compressor.Compressor
 import id.zelory.compressor.constraint.default
@@ -49,7 +45,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.apache.commons.io.FilenameUtils
 import org.json.JSONObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -358,7 +353,7 @@ class EditMaterial : AppCompatActivity() , View.OnClickListener {
     }
 
     private fun safeDataToMaterial() {
-        MaterialToEdit!!.num_inventario = edtNumInventory.text.toString()
+        MaterialToEdit!!.empresa = pref!!.getInt(KEY_CLIENT,0).toString()
         MaterialToEdit!!.descripcion_material = edtDescription.text.toString()
         MaterialToEdit!!.num_maquina = edtNumMaquina.text.toString()
         MaterialToEdit!!.num_activo = edtNumActivo.text.toString()
@@ -378,6 +373,15 @@ class EditMaterial : AppCompatActivity() , View.OnClickListener {
         MaterialToEdit!!.division = edtDivision.text.toString()
         MaterialToEdit!!.comentarios = edtComentarios.text.toString()
         MaterialToEdit!!.serie = edtNumSerie.text.toString()
+        if(MaterialToEdit!!.imgs!!.desc1.length < edtComenFotos1.text.toString().length){
+            MaterialToEdit!!.imgs!!.desc1 = edtComenFotos1.text.toString()
+        }
+        if(MaterialToEdit!!.imgs!!.desc2.length < edtComenFotos2.text.toString().length){
+            MaterialToEdit!!.imgs!!.desc2 = edtComenFotos2.text.toString()
+        }
+        if(MaterialToEdit!!.imgs!!.desc3.length < edtComenFotos3.text.toString().length){
+            MaterialToEdit!!.imgs!!.desc3 = edtComenFotos3.text.toString()
+        }
         //MaterialToEdit!!.imgs!!.img_one = convertImageFileToBase64(File(MaterialToEdit!!.imgs!!.img_one))
     }
 
@@ -413,17 +417,16 @@ class EditMaterial : AppCompatActivity() , View.OnClickListener {
     safeDataToMaterial()
     Log.d("JSON" , Gson().toJson(MaterialToEdit).toString())
     GlobalScope.launch {
-        val result = sendToServer(MaterialToEdit!!)
-        when (result) {
+        when (val result = sendToServer(MaterialToEdit!!)) {
             is Result.Success -> {
                 val answer = result.response.body()
                 Log.d("ANSWER" , answer!!.message)
-                log.debug("ANSWER " + answer!!.message)
+                log.debug("ANSWER " + answer.message)
                 val request = result.response.raw().toString()
                 Log.d("RAW" , request)
                 log.debug("RAW Request" , request)
                 if (answer.message!!.contains("id")) {
-                    val id = answer.message!!.split("id").last()
+                    val id = answer.message!!.split(":").last()
                     Snackbar.make(
                         MainLayout ,
                         "Registro exitoso, el Objeto tiene el ID: " + id ,
@@ -531,7 +534,7 @@ class EditMaterial : AppCompatActivity() , View.OnClickListener {
                                             true -> {
                                                 pref!!.edit()
                                                     .putInt(KEY_CLIENT , listC[i].id)
-                                                    .commit()
+                                                    .apply()
                                                 buildDialog2(listC[i].id_c , listE)
                                                 dialog.dismiss()
                                             }

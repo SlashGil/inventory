@@ -115,6 +115,7 @@ class Search : AppCompatActivity() {
 
                                             var gson = Gson()
                                             var jsonString = gson.toJson(it.objeto)
+
                                             startActivity(Intent(
                                                 applicationContext ,
                                                 EditMaterial::class.java

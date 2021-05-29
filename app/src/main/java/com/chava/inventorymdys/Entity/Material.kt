@@ -31,6 +31,8 @@ data class Material(
     var fotosJson: String ="" ,
     var status: Int = 0,
     ){
+    var ubicacion : String = ""
+
     @PrimaryKey(autoGenerate = true)
     var id: Int? = null
     var num_activo: String = ""
